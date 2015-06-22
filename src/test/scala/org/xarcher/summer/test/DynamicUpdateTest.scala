@@ -32,11 +32,9 @@ class DynamicUpdateTest extends FlatSpec with Matchers with BeforeAndAfterAll {
   "Small table" should "update some colunms" in {
 
     val updateAction = DynUpdate.update(smallTq.filter(_.id === Option(2333.toLong)))(
-      List(
-        DynBase(((s: SmallTable) => s.a1), 2333),
-        DynOpt(((s: SmallTable) => s.a2), Option(2333)),
-        DynBase(((s: SmallTable) => s.a3), "wang")
-      )
+      DynBase(((s: SmallTable) => s.a1), 2333) ::
+      DynOpt(((s: SmallTable) => s.a2), Option(2333)) ::
+      DynBase(((s: SmallTable) => s.a3), "wang") :: Nil
     )
     Await.result(db.run(updateAction), Duration.Inf)
 
