@@ -23,13 +23,13 @@ trait DynUpdate {
 
       case Some(change@DynBase(currentColTran, currentValue)) =>
         import change._
-        val colunmHList: E => (ColType, Rep[DataType]) = (table: E) => hColunms(table) -> currentColTran(table)
-        dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(hValues -> currentValue)
+        val colunmHList: E => (Rep[DataType], ColType) = (table: E) => currentColTran(table) -> hColunms(table)
+        dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(currentValue -> hValues)
 
       case Some(change@DynOpt(currentColTran, currentValue)) =>
         import change._
-        val colunmHList: E => (ColType, Rep[DataType]) = (table: E) => hColunms(table) -> currentColTran(table)
-        dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(hValues -> currentValue)
+        val colunmHList: E => (Rep[DataType], ColType) = (table: E) => currentColTran(table) -> hColunms(table)
+        dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(currentValue -> hValues)
 
       case _ => baseQuery.map(s => hColunms(s)).update(hValues)
 
