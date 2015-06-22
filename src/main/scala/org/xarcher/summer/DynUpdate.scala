@@ -7,17 +7,17 @@ import slick.driver.JdbcDriver.api._
  * Created by djx314 on 15-6-22.
  */
 
-sealed trait DynData[E, U, T] {
+sealed trait DynData[E, T] {
   type DataType = T
 }
 
-case class DynBase[E, U, T](colTra: E => Rep[T], value: T)(implicit val typedType: BaseTypedType[T]) extends DynData[E, U, T]
+case class DynBase[E, T](colTra: E => Rep[T], value: T)(implicit val typedType: BaseTypedType[T]) extends DynData[E, T]
 
-case class DynOpt[E, U, T](colTra: E => Rep[Option[T]], value: Option[T])(implicit val typedType: BaseTypedType[T]) extends DynData[E, U, Option[T]]
+case class DynOpt[E, T](colTra: E => Rep[Option[T]], value: Option[T])(implicit val typedType: BaseTypedType[T]) extends DynData[E, Option[T]]
 
 trait DynUpdate {
 
-  private def dynUpdateAction[E, U, ColType <: Product, ValType <: Product, Level <: FlatShapeLevel](baseQuery: Query[E, U, Seq])(dataList: List[DynData[E, U, _]])(hColunms: E => ColType)(hValues: ValType)(implicit shape: Shape[Level, ColType, ValType, ColType]): DBIOAction[Int, NoStream, Effect.Write] = {
+  private def dynUpdateAction[E, ColType <: Product, ValType <: Product, Level <: FlatShapeLevel](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]])(hColunms: E => ColType)(hValues: ValType)(implicit shape: Shape[Level, ColType, ValType, ColType]): DBIOAction[Int, NoStream, Effect.Write] = {
 
     dataList.headOption match {
 
@@ -37,7 +37,7 @@ trait DynUpdate {
 
   }
 
-  def update[E, U](baseQuery: Query[E, U, Seq])(dataList: List[DynData[E, U, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
+  def update[E](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
 
     dataList.head match {
 
