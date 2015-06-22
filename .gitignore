@@ -1,0 +1,17 @@
+*target
+*.cache
+*.classpath
+*.project
+*.settings
+*.idea
+*.idea_modules
+*.tmpBin
+/logs
+/sbtIvy
+/conf/evolutions
+/bin/
+/sbt
+/sbt.bat
+/elish.bat
+*.sbtserver*
+/conf/generated.keystore
