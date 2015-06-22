@@ -1,8 +1,6 @@
 package org.xarcher.summer
 
 import slick.ast.BaseTypedType
-import slick.collection.heterogeneous._
-import slick.collection.heterogeneous.syntax._
 import slick.driver.JdbcDriver.api._
 
 /**
@@ -23,20 +21,17 @@ trait DynUpdate {
 
     dataList.headOption match {
 
-      case Some(change@DynBase(currentColTran, currentValue)) => {
+      case Some(change@DynBase(currentColTran, currentValue)) =>
         import change._
         val colunmHList: E => (ColType, Rep[DataType]) = (table: E) => hColunms(table) -> currentColTran(table)
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(hValues -> currentValue)
-      }
 
-      case Some(change@DynOpt(currentColTran, currentValue)) => {
+      case Some(change@DynOpt(currentColTran, currentValue)) =>
         import change._
         val colunmHList: E => (ColType, Rep[DataType]) = (table: E) => hColunms(table) -> currentColTran(table)
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(hValues -> currentValue)
-      }
 
-      case _ =>
-        baseQuery.map(s => { println(hColunms(s)); hColunms(s) }).update(hValues)
+      case _ => baseQuery.map(s => hColunms(s)).update(hValues)
 
     }
 
@@ -46,17 +41,15 @@ trait DynUpdate {
 
     dataList.head match {
 
-      case change@DynBase(currentColTran, currentValue) => {
+      case change@DynBase(currentColTran, currentValue) =>
         import change._
         val colunmHList: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(Tuple1(currentValue))
-      }
 
-      case change@DynOpt(currentColTran, currentValue) => {
+      case change@DynOpt(currentColTran, currentValue) =>
         import change._
         val colunmHList: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(Tuple1(currentValue))
-      }
 
     }
 
