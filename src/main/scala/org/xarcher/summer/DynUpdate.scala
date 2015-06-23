@@ -2,25 +2,26 @@ package org.xarcher.summer
 
 import slick.driver.JdbcDriver.api._
 import slick.lifted.{TupleShape, ShapeLevel}
+import slick.lifted.AbstractTable
 
 /**
  * Created by djx314 on 15-6-22.
  */
 
-case class DynData[E, T](colTra: E => Rep[T], value: T)(implicit val dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) {
+case class DynData[E <: AbstractTable[_], T](colTra: E => Rep[T], value: T)(implicit val dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) {
   type DataType = T
 }
 
 trait DynUpdate {
 
-  private def dynUpdateAction[E, ColType <: Product, ValType <: Product](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]])(hColunms: E => ColType)(hValues: ValType)(implicit shape: Shape[FlatShapeLevel, ColType, ValType, ColType]): DBIOAction[Int, NoStream, Effect.Write] = {
+  private def dynUpdateAction[E <: AbstractTable[_], ColType <: Product, ValType <: Product](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]])(hColunms: E => ColType)(hValues: ValType)(implicit shape: Shape[FlatShapeLevel, ColType, ValType, ColType]): DBIOAction[Int, NoStream, Effect.Write] = {
 
     dataList.headOption match {
 
       case Some(change@DynData(currentColTran, currentValue)) =>
         import change._
         val colunmHList: E => (Rep[DataType], ColType) = (table: E) => currentColTran(table) -> hColunms(table)
-        implicit val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType,ValType), (Rep[DataType], ColType)](dynShape,shape)
+        implicit val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(currentValue -> hValues)
 
       case _ => baseQuery.map(s => hColunms(s)).update(hValues)
@@ -29,7 +30,7 @@ trait DynUpdate {
 
   }
 
-  def update[E](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
+  def update[E <: AbstractTable[_]](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
 
     dataList.head match {
 
