@@ -32,9 +32,9 @@ class DynamicUpdateTest extends FlatSpec with Matchers with BeforeAndAfterAll {
   "Small table" should "update some colunms" in {
 
     val updateAction = DynUpdate.update(smallTq.filter(_.id === Option(2333.toLong)))(
-      DynBase(((s: SmallTable) => s.a1), 2333) ::
-      DynOpt(((s: SmallTable) => s.a2), Option(2333)) ::
-      DynBase(((s: SmallTable) => s.a3), "wang") :: Nil
+      DynData(((s: SmallTable) => s.a1), 2333) ::
+      DynData(((s: SmallTable) => s.a2), Option(2333)) ::
+      DynData(((s: SmallTable) => s.a3), "wang") :: Nil
     )
     Await.result(db.run(updateAction), Duration.Inf)
 
@@ -42,9 +42,9 @@ class DynamicUpdateTest extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   "Small table" should "update dynamic" in {
 
-    val aa = if ("github" == "github") Option(DynBase(((s: SmallTable) => s.a1), 2333)) else None
-    val bb = if ("scala" == "china") Option(DynOpt(((s: SmallTable) => s.a2), Option(2333))) else None
-    val cc = if ("archer" == "saber") Option(DynBase(((s: SmallTable) => s.a3), "wang")) else None
+    val aa = if ("github" == "github") Option(DynData(((s: SmallTable) => s.a1), 2333)) else None
+    val bb = if ("scala" == "china") Option(DynData(((s: SmallTable) => s.a2), Option(2333))) else None
+    val cc = if ("archer" == "saber") Option(DynData(((s: SmallTable) => s.a3), "wang")) else None
 
     val updateList = (aa :: bb :: cc :: Nil).collect { case Some(s) => s }
 
