@@ -31,13 +31,15 @@ trait DynUpdate {
 
   def update[E](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
 
-    dataList.head match {
+    dataList.headOption match {
 
-      case change@DynData(currentColTran, currentValue) =>
+      case Some(change@DynData(currentColTran, currentValue)) =>
         import change._
         val colunmHList: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
         implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(Tuple1(currentValue))
+
+      case _ => DBIO.successful(0)
 
     }
 

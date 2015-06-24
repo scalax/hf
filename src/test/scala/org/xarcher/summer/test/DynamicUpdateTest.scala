@@ -49,7 +49,14 @@ class DynamicUpdateTest extends FlatSpec with Matchers with BeforeAndAfterAll {
     val updateList = (aa :: bb :: cc :: Nil).collect { case Some(s) => s }
 
     val updateAction = DynUpdate.update(smallTq.filter(_.id === Option(2333.toLong)))(updateList)
-    Await.result(db.run(updateAction), Duration.Inf)
+    assert(Await.result(db.run(updateAction), Duration.Inf) == 0)
+
+  }
+
+  "Small table" should "update with a empty list" in {
+
+    val updateAction = DynUpdate.update(smallTq.filter(_.id === Option(2333.toLong)))(Nil)
+    assert(Await.result(db.run(updateAction), Duration.Inf) == 0)
 
   }
 
