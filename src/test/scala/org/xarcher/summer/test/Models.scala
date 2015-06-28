@@ -16,7 +16,7 @@ case class SmallModel(
 )
 
 class SmallTable(tag: Tag) extends Table[SmallModel](tag, "aabbbbbbb") {
-  def id = column[Option[Long]]("id", O.PrimaryKey, O.AutoInc)
+  def id = column[Option[Long]]("id", O.PrimaryKey)
   def a1 = column[Int]("a1")
   def a2 = column[Option[Int]]("a2")
   def a3 = column[String]("a3")

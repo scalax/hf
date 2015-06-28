@@ -18,8 +18,7 @@ trait DynUpdate {
   def update[E <: AbstractTable[_]](q: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
     dataList match {
       case change :: tail =>
-        val init = Change(change)
-        val changes = tail.foldLeft(init) { (r, c) =>
+        val changes = tail.foldLeft(Change(change)) { (r, c) =>
           r.append(c)
         }
         import changes._
