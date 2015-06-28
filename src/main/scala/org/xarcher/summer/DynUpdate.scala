@@ -1,5 +1,6 @@
 package org.xarcher.summer
 
+import scala.language.existentials
 import slick.driver.JdbcDriver.api._
 import slick.lifted.{TupleShape, ShapeLevel}
 import slick.lifted.AbstractTable
@@ -14,36 +15,59 @@ case class DynData[E <: AbstractTable[_], T](colTra: E => Rep[T], value: T)(impl
 
 trait DynUpdate {
 
-  private def dynUpdateAction[E <: AbstractTable[_], ColType <: Product, ValType <: Product](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]])(hColunms: E => ColType)(hValues: ValType)(implicit shape: Shape[FlatShapeLevel, ColType, ValType, ColType]): DBIOAction[Int, NoStream, Effect.Write] = {
-
-    dataList.headOption match {
-
-      case Some(change@DynData(currentColTran, currentValue)) =>
-        import change._
-        val colunmHList: E => (Rep[DataType], ColType) = (table: E) => currentColTran(table) -> hColunms(table)
-        implicit val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
-        dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(currentValue -> hValues)
-
-      case _ => baseQuery.map(s => hColunms(s)).update(hValues)
-
+  def update[E <: AbstractTable[_]](q: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
+    dataList match {
+      case change :: tail =>
+        val changes = tail.foldLeft(Change(change)) { (r, c) =>
+          r.append(c)
+        }
+        import changes._
+        q.map(col).update(data)
+      case Nil => DBIO.successful(0)
     }
-
   }
+}
 
-  def update[E <: AbstractTable[_]](baseQuery: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
+private trait Change[E <: AbstractTable[_]] {
+  type ColType <: Product
+  type ValType <: Product
+  val col: E => ColType
+  val data: ValType
+  implicit val shape:  Shape[_ <: FlatShapeLevel, ColType, ValType, ColType]
 
-    dataList.headOption match {
-
-      case Some(change@DynData(currentColTran, currentValue)) =>
-        import change._
-        val colunmHList: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
-        implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
-        dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(Tuple1(currentValue))
-      case _ => DBIO.successful(0)
-    }
-
+  def append(change: DynData[E, _]) = change match {
+    case change@DynData(currentColTran, currentValue) =>
+      import change._
+      type NewColType = (Rep[DataType], ColType)
+      type NewValType = (DataType, ValType)
+      val colunm: E => NewColType = (table: E) => currentColTran(table) -> col(table)
+      implicit val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
+      val value =  currentValue -> data
+      new Change[E] {
+        type ColType = NewColType
+        type ValType = NewValType
+        val col = colunm
+        val data = value
+        val shape = dynTuple2Shape
+      }
   }
+}
 
+private object Change {
+  def apply[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
+    case change@DynData(currentColTran, currentValue) =>
+      import change._
+      val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
+      val value =  Tuple1(currentValue)
+      implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
+      new Change[E] {
+        type ColType = Tuple1[Rep[DataType]]
+        type ValType = Tuple1[DataType]
+        val col = colunm
+        val data = value
+        val shape = dynTuple1Shape
+      }
+  }
 }
 
 object DynUpdate extends DynUpdate
