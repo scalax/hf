@@ -39,9 +39,7 @@ trait DynUpdate {
         val colunmHList: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
         implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
         dynUpdateAction(baseQuery)(dataList.tail)(colunmHList)(Tuple1(currentValue))
-
       case _ => DBIO.successful(0)
-
     }
 
   }
