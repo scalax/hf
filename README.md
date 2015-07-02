@@ -37,6 +37,8 @@ Persons
   .result
 ```
 
+详细信息调用方法可查看[单元测试](https://github.com/scalax/slick-summer/blob/master/src/test/scala/org/xarcher/summer/test/DynamicUpdateTest.scala)
+
 ## 实现思路
 
 将更新列转化为`C1 -> C2 -> C3 -> ... -> Cn`的形式，然后自动提供`Shape`
