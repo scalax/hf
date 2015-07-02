@@ -18,7 +18,7 @@ Persons.filter(_.id === id).map { p =>
 ```scala
 import org.xarcher.summer._
 
-Person
+Persons
   .filter(_.id === id)
   .change(_.name, "foo")
   .change(_.address, "bar")
@@ -31,7 +31,7 @@ Person
 
 ```scala
 import org.xarcher.summer._
-Person
+Persons
   .filter(_.id === id)
   .changeIf("foo" == "bar")(_.name, "foo")
   .result
