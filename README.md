@@ -1,5 +1,42 @@
-# slick-summer
+# slick-summer -- slick update功能增强
 
-在周日的散步找到思路，在夏至的凌晨2点感到绝望，在夏至的中午朦胧中找到灵感，于是，在夏至的暴雨中漫步时决定了这个名字。
+[English](https://github.com/scalax/slick-summer/blob/master/README_en.md)
 
-A scala slick plugin. Dynamically update columns in runtime without reflect.
+## 简介
+```scala
+Persons.filter(_.id === id).map { p =>
+  (p.name, p.address, p.postcode, p.updateTime)
+}.update(("foo", "bar", "baz", now))
+```
+以上是一个典型的slick update例子，api设计的很合理和collection基本一致
+但很难实现以下需求
++ 选择性更新某几列
++ 更新超过22列
+
+本项目实现了以上功能，然而一定程度上破坏了和collection的一致性
+
+```scala
+import org.xarcher.summer._
+
+Person
+  .filter(_.id === id)
+  .change(_.name, "foo")
+  .change(_.address, "bar")
+  .change(_.postcode, "baz")
+  .change(_.updateTime, now)
+  .result
+```
+
+另外新增了`changeIf`来做选择性更新
+
+```scala
+import org.xarcher.summer._
+Person
+  .filter(_.id === id)
+  .changeIf("foo" == "bar")(_.name, "foo")
+  .result
+```
+
+## 实现思路
+
+将更新列转化为`C1 -> C2 -> C3 -> ... -> Cn`的形式，然后提供自动一个对应`Shape`
