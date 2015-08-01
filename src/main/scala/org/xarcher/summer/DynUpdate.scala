@@ -4,6 +4,7 @@ import scala.language.existentials
 import slick.driver.JdbcDriver.api._
 import slick.lifted.{TupleShape, ShapeLevel}
 import slick.lifted.AbstractTable
+import scala.language.higherKinds
 
 /**
  * Created by djx314 on 15-6-22.
@@ -15,7 +16,7 @@ case class DynData[E <: AbstractTable[_], T](colTra: E => Rep[T], value: T)(impl
 
 trait DynUpdate {
 
-  def update[E <: AbstractTable[_]](q: Query[E, _, Seq])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
+  def update[E <: AbstractTable[_], F[_]](q: Query[E, _, F])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
     dataList match {
       case change :: tail =>
         val changes = tail.foldLeft(Change(change)) { (r, c) =>
