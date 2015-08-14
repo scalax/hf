@@ -1,9 +1,8 @@
 package org.xarcher.summer
 
 import scala.language.existentials
-import slick.driver.JdbcDriver.api._
-import slick.lifted.{TupleShape, ShapeLevel}
-import slick.lifted.AbstractTable
+import slick.lifted._
+import slick.dbio._
 import scala.language.higherKinds
 
 /**

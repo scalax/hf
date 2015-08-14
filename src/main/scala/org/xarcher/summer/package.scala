@@ -1,11 +1,11 @@
 package org.xarcher
 
 import scala.language.existentials
-import slick.driver.JdbcDriver.api._
-import slick.lifted.AbstractTable
+import slick.lifted._
 import scala.language.higherKinds
 
 package object summer {
+
   implicit class QuerySyntax[E <: AbstractTable[_], F[_]](val baseQuery: Query[E, _, F]) {
     def change[T](col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
       val data = DynData(col, value)
