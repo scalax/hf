@@ -1,5 +1,6 @@
 package org.xarcher.summer
 
+import slick.driver.JdbcDriver
 import scala.language.existentials
 import slick.lifted._
 import slick.dbio._
@@ -22,6 +23,8 @@ trait DynUpdate {
           r.append(c)
         }
         import changes._
+        object CommonDriver extends JdbcDriver
+        import CommonDriver.api._
         q.map(col).update(data)
       case Nil => DBIO.successful(0)
     }
