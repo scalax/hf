@@ -7,29 +7,29 @@ import scala.language.higherKinds
 package object summer {
 
   implicit class QuerySyntax[E <: AbstractTable[_], F[_]](val baseQuery: Query[E, _, F]) {
-
-    case class UpdateBuilder[E <: AbstractTable[_], F[_]](changes: List[DynData[E, _]], query: Query[E, _, F]) {
-      def change[T](col: E => Rep[T], value: T)
-                   (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
-        val data = DynData(col, value)
-        UpdateBuilder(data :: changes, query)
-      }
-
-      def changeIf[T](b: Boolean)(col: E => Rep[T], value: T)
-                     (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) =
-        if(b) change(col, value) else this
-
-      def result = DynUpdate.update(query)(changes)
-    }
-
     def change[T](col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
       val data = DynData(col, value)
       UpdateBuilder(data :: Nil, baseQuery)
     }
 
-    def changeIf[T](b: => Boolean)(col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) =
+    def changeIf[T](b: => Boolean)(col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
       if(b) change(col, value) else UpdateBuilder(Nil, baseQuery)
+    }
+  }
 
+  final case class UpdateBuilder[E <: AbstractTable[_], F[_]](changes: List[DynData[E, _]], query: Query[E, _, F]) {
+    def change[T](col: E => Rep[T], value: T)
+      (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
+      val data = DynData(col, value)
+      UpdateBuilder(data :: changes, query)
+    }
+
+    def changeIf[T](b: Boolean)(col: E => Rep[T], value: T)
+      (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
+      if(b) change(col, value) else this
+    }
+
+    def result = DynUpdate.update(query)(changes)
   }
 
 }
