@@ -22,7 +22,8 @@ object `slick-summer` extends Build {
       "com.typesafe.slick" %% "slick" % "3.0.2",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "com.h2database" % "h2" % "1.4.187" % "test",
-      "org.slf4j" % "slf4j-simple" % "1.7.12" % "test"
+      "org.slf4j" % "slf4j-simple" % "1.7.12" % "test",
+      "org.typelevel" % "scala-reflect" % "2.11.7"
     )
   )
 

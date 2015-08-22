@@ -5,7 +5,7 @@ import org.scalatest._
 import org.scalatest.concurrent._
 import org.slf4j.LoggerFactory
 import org.xarcher.summer._
-import slick.driver.H2Driver.api._
+import slick.driver.MySQLDriver.api._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -45,11 +45,12 @@ class DynamicUpdateTest extends FlatSpec
 
   "Small table" should "update some colunms" in {
 
-    val updateAction = smallTq.filter(_.id === Option(2333.toLong))
+    val updateQ = smallTq.filter(_.id === Option(2333.toLong))
       .change(_.a1, 2333)
       .change(_.a2, Some(2333))
       .change(_.a3, "wang")
-      .result
+      .updateInfo
+    val updateAction = UpdateAction.tran(updateQ)
     val updated = db.run(updateAction >> getQ).futureValue
     updated.a1 should be(2333)
     updated.a2 should be(Some(2333))
@@ -62,9 +63,10 @@ class DynamicUpdateTest extends FlatSpec
       .changeIf("github" == "github")(_.a1, 2333)
       .changeIf("scala" == "china")(_.a2, Some(2333))
       .changeIf("archer" == "saber")(_.a3, "wang")
-      .result
+      .updateInfo
 
-    val finalQ = updateQ >> getQ
+    val updateAction = UpdateAction.tran(updateQ)
+    val finalQ = updateAction >> getQ
     val updated = db.run(finalQ).futureValue
     updated.a1 should be(2333)
     updated.a2 should be(Some(2))

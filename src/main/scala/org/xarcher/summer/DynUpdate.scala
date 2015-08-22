@@ -1,6 +1,6 @@
 package org.xarcher.summer
 
-import slick.driver.JdbcDriver
+import slick.driver.JdbcActionComponent
 import scala.language.existentials
 import slick.lifted._
 import slick.dbio._
@@ -10,29 +10,25 @@ import scala.language.higherKinds
  * Created by djx314 on 15-6-22.
  */
 
-case class DynData[E <: AbstractTable[_], T](colTra: E => Rep[T], value: T)(implicit val dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) {
-  type DataType = T
+case class DynData[E <: AbstractTable[_], U](colTra: E => Rep[U], value: U)(implicit val dynShape: Shape[_ <: ShapeLevel, Rep[U], U, Rep[U]]) {
+  type DataType = U
 }
 
 trait DynUpdate {
 
-  object CommonDriver extends JdbcDriver
-  import CommonDriver.api._
-
-  def update[E <: AbstractTable[_], F[_]](q: Query[E, _, F])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
+  def update[E <: AbstractTable[_]](dataList: List[DynData[E, _]]): Option[DynamicUpdateChange[E]] = {
     dataList match {
       case change :: tail =>
-        val changes = tail.foldLeft(Change(change)) { (r, c) =>
+        Option(tail.foldLeft(Change(change)) { (r, c) =>
           r.append(c)
-        }
-        import changes._
-        q.map(col).update(data)
-      case Nil => DBIO.successful(0)
+        })
+      case Nil => None
     }
   }
+
 }
 
-private trait Change[E <: AbstractTable[_]] {
+trait DynamicUpdateChange[E <: AbstractTable[_]] {
   type ColType <: Product
   type ValType <: Product
   val col: E => ColType
@@ -47,7 +43,7 @@ private trait Change[E <: AbstractTable[_]] {
       val colunm: E => NewColType = (table: E) => currentColTran(table) -> col(table)
       implicit val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
       val value =  currentValue -> data
-      new Change[E] {
+      new DynamicUpdateChange[E] {
         type ColType = NewColType
         type ValType = NewValType
         val col = colunm
@@ -55,16 +51,17 @@ private trait Change[E <: AbstractTable[_]] {
         val shape = dynTuple2Shape
       }
   }
+
 }
 
 private object Change {
-  def apply[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
+  def apply[E <: AbstractTable[_]](change: DynData[E, _]): DynamicUpdateChange[E] = change match {
     case change@DynData(currentColTran, currentValue) =>
       import change._
       val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
       val value =  Tuple1(currentValue)
       implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
-      new Change[E] {
+      new DynamicUpdateChange[E] {
         type ColType = Tuple1[Rep[DataType]]
         type ValType = Tuple1[DataType]
         val col = colunm
