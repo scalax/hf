@@ -16,6 +16,9 @@ case class DynData[E <: AbstractTable[_], T](colTra: E => Rep[T], value: T)(impl
 
 trait DynUpdate {
 
+  object CommonDriver extends JdbcDriver
+  import CommonDriver.api._
+
   def update[E <: AbstractTable[_], F[_]](q: Query[E, _, F])(dataList: List[DynData[E, _]]): DBIOAction[Int, NoStream, Effect.Write] = {
     dataList match {
       case change :: tail =>
@@ -23,8 +26,6 @@ trait DynUpdate {
           r.append(c)
         }
         import changes._
-        object CommonDriver extends JdbcDriver
-        import CommonDriver.api._
         q.map(col).update(data)
       case Nil => DBIO.successful(0)
     }
