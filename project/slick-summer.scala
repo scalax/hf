@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import cn.gov.heshan.sbt.CustomSettings
+import org.xarcher.summer.CustomSettings
 import com.typesafe.sbt.SbtGit._
 
 object summer extends Build {
@@ -19,7 +19,7 @@ object summer extends Build {
   .settings(
     name := "slick-summer",
     libraryDependencies ++= Seq(
-      "com.typesafe.slick" %% "slick" % "3.0.0",
+      "com.typesafe.slick" %% "slick" % "3.0.2",
       "org.scalatest" %% "scalatest" % "2.2.4" % "test",
       "com.h2database" % "h2" % "1.4.187" % "test",
       "org.slf4j" % "slf4j-simple" % "1.7.12" % "test"
