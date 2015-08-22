@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import cn.gov.heshan.sbt.CustomSettings
+import org.xarcher.summer.CustomSettings
 import com.typesafe.sbt.SbtGit._
 
 object `slick-summer` extends Build {

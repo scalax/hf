@@ -1,4 +1,4 @@
-package cn.gov.heshan.sbt
+package org.xarcher.summer
 
 object OSName {
 
