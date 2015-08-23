@@ -39,7 +39,7 @@ object UpdateQuery {
             query: _root_.slick.driver.JdbcActionComponent#UpdateActionExtensionMethodsImpl[U]
           }
         }
-        _root_.org.xarcher.summer.UpdateInfoContent($query, updateExtensionImpl)
+        _root_.org.xarcher.summer.UpdateInfoContent($query)(updateExtensionImpl)
       }""")
   }
 
@@ -53,7 +53,7 @@ object UpdateQuery {
             query: _root_.slick.driver.JdbcActionComponent#UpdateActionExtensionMethodsImpl[U]
           }
         }
-        _root_.org.xarcher.summer.UpdateInfoContent.withChanges($query, $dataList, updateExtensionImpl)
+        _root_.org.xarcher.summer.UpdateInfoContent.withChanges($query, $dataList)(updateExtensionImpl)
       }""")
   }
 
