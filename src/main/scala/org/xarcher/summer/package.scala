@@ -1,14 +1,11 @@
 package org.xarcher
 
-import scala.language.existentials
-import slick.lifted._
-import scala.language.higherKinds
-
 package object summer {
 
-  val UpdateAction = updatemacro.UpdateAction
+  //val UpdateAction = updatemacro.UpdateAction
+  val UpdateQuery = updatemacro.UpdateQuery
 
-  implicit class QuerySyntax[E <: AbstractTable[_], F[_]](val baseQuery: Query[E, _, F]) {
+  /*implicit class QuerySyntax[E <: AbstractTable[_], F[_]](val baseQuery: Query[E, _, F]) {
 
     def change[T](col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
       val data = DynData(col, value)
@@ -33,6 +30,6 @@ package object summer {
       if(b) change(col, value) else this
     }
 
-  }
+  }*/
 
 }
