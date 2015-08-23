@@ -1,7 +1,7 @@
 package org.xarcher.summer.test
 
 import slick.collection.heterogeneous.HNil
-import slick.driver.MySQLDriver.api._
+import slick.driver.H2Driver.api._
 /**
  * Created by djx314 on 15-6-22.
  */
