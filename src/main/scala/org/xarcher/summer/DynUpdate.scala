@@ -27,13 +27,13 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
   val dataList: List[DynData[E, _]]
   val updateExtensionImpl: UpdateActionExtensionMethodsImpl
 
-  private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): DynamicUpdateChange[E] = change match {
+  private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
     case change@DynData(currentColTran, currentValue) =>
       import change._
       val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
       val value =  Tuple1(currentValue)
       implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
-      new DynamicUpdateChange[E] {
+      new Change[E] {
         type ColType = Tuple1[Rep[DataType]]
         type ValType = Tuple1[DataType]
         val col = colunm
@@ -87,7 +87,7 @@ object UpdateInfoContent {
 
 }
 
-private trait DynamicUpdateChange[E <: AbstractTable[_]] {
+private trait Change[E <: AbstractTable[_]] {
   type ColType <: Product
   type ValType <: Product
   val col: E => ColType
@@ -102,7 +102,7 @@ private trait DynamicUpdateChange[E <: AbstractTable[_]] {
       val colunm: E => NewColType = (table: E) => currentColTran(table) -> col(table)
       val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
       val value =  currentValue -> data
-      new DynamicUpdateChange[E] {
+      new Change[E] {
         type ColType = NewColType
         type ValType = NewValType
         val col = colunm
