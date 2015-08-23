@@ -1,7 +1,5 @@
 package org.xarcher
 
-import slick.driver.JdbcDriver
-
 import scala.language.existentials
 import slick.lifted._
 import scala.language.higherKinds
@@ -34,8 +32,6 @@ package object summer {
       (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
       if(b) change(col, value) else this
     }
-
-    def updateInfo: (Query[E, _, F], Option[DynamicUpdateChange[E]]) = query -> DynUpdate.update(changes)
 
   }
 

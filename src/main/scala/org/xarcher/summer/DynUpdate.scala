@@ -1,6 +1,5 @@
 package org.xarcher.summer
 
-import slick.driver.JdbcActionComponent
 import scala.language.existentials
 import slick.lifted._
 import slick.dbio._
