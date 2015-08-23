@@ -77,10 +77,10 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
 
 object UpdateInfoContent {
 
-  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], extensionImpl: UpdateActionExtensionMethodsImpl) =
-    withChanges(initQuery, Nil, extensionImpl)
+  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F])(implicit extensionImpl: UpdateActionExtensionMethodsImpl) =
+    withChanges(initQuery, Nil)(extensionImpl)
 
-  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]], extensionImpl: UpdateActionExtensionMethodsImpl) =
+  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]])(implicit extensionImpl: UpdateActionExtensionMethodsImpl) =
     new UpdateInfoContent[E, F] {
       override val query = initQuery
       val dataList = updateDataList
