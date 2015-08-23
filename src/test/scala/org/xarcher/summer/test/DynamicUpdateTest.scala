@@ -63,7 +63,7 @@ class DynamicUpdateTest extends FlatSpec
     updated.a3 should be("wang")
   }
 
-  "Small table" should "update dynamic" in {
+  it should "update dynamic" in {
 
     /*val updateQ = smallTq.filter(_.id === 2333L)
       .changeIf("github" == "github")(_.a1, 2333)
@@ -72,7 +72,7 @@ class DynamicUpdateTest extends FlatSpec
 
     val updateQ = UpdateQuery(smallTq.filter(_.id === 2333L))
       .changeIf("github" == "github")(_.a1, 2333)
-      .changeIf("scala" == "china")(_.a2, Some(2333))
+      .changeIf("scala" == "china")(_.a2, Option(2333))
       .changeIf("archer" == "saber")(_.a3, "wang")
       .result
 
@@ -82,4 +82,22 @@ class DynamicUpdateTest extends FlatSpec
     updated.a2 should be(Some(2))
     updated.a3 should be("a3")
   }
+
+  it should "update from list provide by other place" in {
+
+    import org.xarcher.summer._
+    val query = smallTq.filter(_.id === 2333L)
+    val dynData1 = DynData[SmallTable, Int](_.a1, 9494)
+    val dynData2 = DynData[SmallTable, Option[Int]](_.a2, Option(456))
+    val changes = dynData1 :: dynData2 :: Nil
+    val updateQ = UpdateQuery.withChanges(query, changes).result
+
+    val finalQ = updateQ >> getQ
+    val updated = db.run(finalQ).futureValue
+    updated.a1 should be(9494)
+    updated.a2 should be(Option(456))
+    updated.a3 should be("a3")
+
+  }
+
 }
