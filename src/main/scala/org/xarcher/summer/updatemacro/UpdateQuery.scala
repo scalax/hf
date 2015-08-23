@@ -1,6 +1,6 @@
 package org.xarcher.summer.updatemacro
 
-import org.xarcher.summer.UpdateInfoContent
+import org.xarcher.summer.{DynData, UpdateInfoContent}
 
 import slick.lifted._
 import scala.language.higherKinds
@@ -28,6 +28,7 @@ import scala.reflect.macros.whitebox.Context
 }*/
 
 object UpdateQuery {
+
   def apply[E <: AbstractTable[_], F[_]](query: Query[E, _, F]): UpdateInfoContent[E, F] = macro applyImpl[E, F]
   def applyImpl[E <: AbstractTable[_], F[_]](c: Context)(query: c.Expr[Query[E, _, F]]): c.Expr[UpdateInfoContent[E, F]] = {
     import c.universe._
@@ -41,4 +42,19 @@ object UpdateQuery {
         _root_.org.xarcher.summer.UpdateInfoContent($query, updateExtensionImpl)
       }""")
   }
+
+  def withChanges[E <: AbstractTable[_], F[_]](query: Query[E, _, F], dataList: List[DynData[E, _]]): UpdateInfoContent[E, F] = macro withChangesImpl[E, F]
+  def withChangesImpl[E <: AbstractTable[_], F[_]](c: Context)(query: c.Expr[Query[E, _, F]], dataList: c.Expr[List[DynData[E, _]]]): c.Expr[UpdateInfoContent[E, F]] = {
+    import c.universe._
+    c.Expr[UpdateInfoContent[E, F]](
+      q"""{
+        val updateExtensionImpl = new _root_.org.xarcher.summer.UpdateActionExtensionMethodsImpl {
+          def transaform[U, F[_]](query: _root_.slick.lifted.Query[_, U, F]): _root_.slick.driver.JdbcActionComponent#UpdateActionExtensionMethodsImpl[U] = {
+            query: _root_.slick.driver.JdbcActionComponent#UpdateActionExtensionMethodsImpl[U]
+          }
+        }
+        _root_.org.xarcher.summer.UpdateInfoContent.withChanges($query, $dataList, updateExtensionImpl)
+      }""")
+  }
+
 }
