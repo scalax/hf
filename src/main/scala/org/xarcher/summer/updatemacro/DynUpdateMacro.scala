@@ -19,8 +19,8 @@ object UpdateAction {
     c.Expr[DBIOAction[Int, NoStream, Effect.Write]](
       q"""{
         val query = ${updateBuilder}.query
-        val changesOpt = org.xarcher.summer.DynUpdate.update(${updateBuilder}.changes)
-        lazy val zeroDBIO = DBIO.successful(0): slick.dbio.DBIOAction[Int, slick.dbio.NoStream, slick.dbio.Effect.Write]
+        val changesOpt = _root_.org.xarcher.summer.DynUpdate.update(${updateBuilder}.changes)
+        lazy val zeroDBIO = _root_.slick.dbio.DBIO.successful(0): _root_.slick.dbio.DBIOAction[Int, _root_.slick.dbio.NoStream, _root_.slick.dbio.Effect.Write]
         changesOpt.fold(zeroDBIO)(changes => {
           query.map(changes.col)(changes.shape).update(changes.data)
         })
