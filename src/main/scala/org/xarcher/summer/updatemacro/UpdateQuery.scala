@@ -27,7 +27,7 @@ import scala.reflect.macros.whitebox.Context
   }
 }*/
 
-object UpdateQuery {
+/*object UpdateQuery {
 
   def apply[E <: AbstractTable[_], F[_]](query: Query[E, _, F]): UpdateInfoContent[E, F] = macro applyImpl[E, F]
   def applyImpl[E <: AbstractTable[_], F[_]](c: Context)(query: c.Expr[Query[E, _, F]]): c.Expr[UpdateInfoContent[E, F]] = {
@@ -57,4 +57,4 @@ object UpdateQuery {
       }""")
   }
 
-}
+}*/
