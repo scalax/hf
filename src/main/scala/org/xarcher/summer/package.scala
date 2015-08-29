@@ -3,7 +3,7 @@ package org.xarcher
 package object summer {
 
   //val UpdateAction = updatemacro.UpdateAction
-  val UpdateQuery = updatemacro.UpdateQuery
+  //val UpdateQuery = updatemacro.UpdateQuery
 
   /*implicit class QuerySyntax[E <: AbstractTable[_], F[_]](val baseQuery: Query[E, _, F]) {
 

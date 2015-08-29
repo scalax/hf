@@ -1,6 +1,6 @@
 package org.xarcher.summer
 
-import slick.driver.{JdbcActionComponent, JdbcProfile}
+import slick.driver.JdbcProfile
 
 import scala.language.existentials
 import slick.lifted._
@@ -15,17 +15,11 @@ case class DynData[E <: AbstractTable[_], U](colTra: E => Rep[U], value: U)(impl
   type DataType = U
 }
 
-trait UpdateActionExtensionMethodsImpl {
-
-  def transaform[U, F[_]](query: Query[_, U, F]): JdbcActionComponent#UpdateActionExtensionMethodsImpl[U]
-
-}
-
 trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
 
   val query: Query[E, _, F]
   val dataList: List[DynData[E, _]]
-  val updateExtensionImpl: UpdateActionExtensionMethodsImpl
+  val jdbcProfile: JdbcProfile
 
   private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
     case change@DynData(currentColTran, currentValue) =>
@@ -47,11 +41,11 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
     val data = DynData(col, value)
     val subQuery = query
     val subDataList = data :: dataList
-    val subImpl = updateExtensionImpl
+    val driver = jdbcProfile
     new UpdateInfoContent[E, F] {
       override val query = subQuery
       override val dataList = subDataList
-      override val updateExtensionImpl = subImpl
+      override val jdbcProfile = driver
     }
   }
 
@@ -68,23 +62,24 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
         })
         import changes._
         val repsQuery = query.map(col(_))(shape)
-        updateExtensionImpl.transaform(repsQuery).update(data)
+        import jdbcProfile.api._
+        repsQuery.update(data)
       case Nil => DBIO successful 0
     }
   }
 
 }
 
-object UpdateInfoContent {
+object DynUpdate {
 
-  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F])(implicit extensionImpl: UpdateActionExtensionMethodsImpl) =
-    withChanges(initQuery, Nil)(extensionImpl)
+  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F])(driver: JdbcProfile) =
+    withChanges(initQuery, Nil)(driver)
 
-  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]])(implicit extensionImpl: UpdateActionExtensionMethodsImpl) =
+  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]])(driver: JdbcProfile) =
     new UpdateInfoContent[E, F] {
       override val query = initQuery
       val dataList = updateDataList
-      val updateExtensionImpl = extensionImpl
+      val jdbcProfile = driver
     }
 
 }
