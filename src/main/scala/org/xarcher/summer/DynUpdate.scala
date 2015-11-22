@@ -108,33 +108,3 @@ private trait Change[E <: AbstractTable[_]] {
   }
 
 }
-
-/*trait DynUpdate {
-
-  private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): DynamicUpdateChange[E] = change match {
-    case change@DynData(currentColTran, currentValue) =>
-      import change._
-      val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
-      val value =  Tuple1(currentValue)
-      implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
-      new DynamicUpdateChange[E] {
-        type ColType = Tuple1[Rep[DataType]]
-        type ValType = Tuple1[DataType]
-        val col = colunm
-        val data = value
-        val shape = dynTuple1Shape
-      }
-  }
-
-  def update[E <: AbstractTable[_]](dataList: List[DynData[E, _]]): Option[DynamicUpdateChange[E]] = {
-    dataList match {
-      case change :: tail =>
-        Option(tail.foldLeft(changHead(change)) { (r, c) =>
-          r.append(c)
-        })
-      case Nil => None
-    }
-  }
-
-}
-object DynUpdate extends DynUpdate*/
