@@ -60,10 +60,9 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
         val changes = tail.foldLeft(changHead(change))({ (r, c) =>
           r.append(c)
         })
-        import changes._
-        val repsQuery = query.map(col(_))(shape)
+        val repsQuery = query.map(changes.col(_))(changes.shape)
         import jdbcProfile.api._
-        repsQuery.update(data)
+        repsQuery.update(changes.data)
       case Nil => DBIO successful 0
     }
   }
