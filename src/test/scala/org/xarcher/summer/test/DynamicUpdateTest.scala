@@ -4,12 +4,13 @@ import org.h2.jdbcx.JdbcDataSource
 import org.scalatest._
 import org.scalatest.concurrent._
 import org.slf4j.LoggerFactory
-import org.xarcher.summer.DynUpdate
-import slick.driver.H2Driver.api._
-import scala.concurrent.ExecutionContext.Implicits.global
+import org.xarcher.summer._
+
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.higherKinds
+import slick.driver.H2Driver.api._
 
 /**
  * Created by djx314 on 15-6-22.
@@ -32,8 +33,6 @@ class DynamicUpdateTest extends FlatSpec
     Database.forDataSource(datasource)
   }
 
-  val driver = slick.driver.H2Driver
-
   val data = SmallModel(Some(2333L), 1, Some(2), "a3", 4, 5)
   val getQ = smallTq.filter(_.id === 2333L).result.head
 
@@ -48,12 +47,7 @@ class DynamicUpdateTest extends FlatSpec
 
   "Small table" should "update some colunms" in {
 
-    /*val updateQ = smallTq.filter(_.id === Option(2333.toLong))
-      .change(_.a1, 2333)
-      .change(_.a2, Some(2333))
-      .change(_.a3, "wang")*/
-
-    val updateQ = DynUpdate(smallTq.filter(_.id === Option(2333.toLong)))(driver)
+    val updateQ = smallTq.filter(_.id === Option(2333.toLong))
       .change(_.a1, 2333)
       .change(_.a2, Some(2333))
       .change(_.a3, "wang")
@@ -67,12 +61,7 @@ class DynamicUpdateTest extends FlatSpec
 
   it should "update dynamic" in {
 
-    /*val updateQ = smallTq.filter(_.id === 2333L)
-      .changeIf("github" == "github")(_.a1, 2333)
-      .changeIf("scala" == "china")(_.a2, Some(2333))
-      .changeIf("archer" == "saber")(_.a3, "wang")*/
-
-    val updateQ = DynUpdate(smallTq.filter(_.id === 2333L))(driver)
+    val updateQ = smallTq.filter(_.id === 2333L)
       .changeIf("github" == "github")(_.a1, 2333)
       .changeIf("scala" == "china")(_.a2, Option(2333))
       .changeIf("archer" == "saber")(_.a3, "wang")
@@ -87,12 +76,11 @@ class DynamicUpdateTest extends FlatSpec
 
   it should "update from list provide by other place" in {
 
-    import org.xarcher.summer._
     val query = smallTq.filter(_.id === 2333L)
     val dynData1 = DynData[SmallTable, Int](_.a1, 9494)
     val dynData2 = DynData[SmallTable, Option[Int]](_.a2, Option(456))
     val changes = dynData1 :: dynData2 :: Nil
-    val updateQ = DynUpdate.withChanges(query, changes)(driver).result
+    val updateQ = DynUpdate.withChanges(query, changes).result
 
     val finalQ = updateQ >> getQ
     val updated = db.run(finalQ).futureValue
@@ -100,6 +88,16 @@ class DynamicUpdateTest extends FlatSpec
     updated.a2 should be(Option(456))
     updated.a3 should be("a3")
 
+  }
+
+  "empty update list" should "update with out exception and return 0" in {
+
+    val query = smallTq.filter(_.id === 2333L)
+
+    val updateQ = DynUpdate.withChanges(query, Nil).result
+    val updated = db.run(updateQ).futureValue
+
+    updated should be(0)
   }
 
 }

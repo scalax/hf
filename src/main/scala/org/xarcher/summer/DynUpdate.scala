@@ -1,11 +1,11 @@
 package org.xarcher.summer
 
-import slick.driver.JdbcProfile
+import slick.driver.{JdbcActionComponent, JdbcProfile}
 
 import scala.language.existentials
-import slick.lifted._
-import slick.dbio._
 import scala.language.higherKinds
+import slick.dbio._
+import slick.lifted._
 
 /**
  * Created by djx314 on 15-6-22.
@@ -19,7 +19,6 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
 
   val query: Query[E, _, F]
   val dataList: List[DynData[E, _]]
-  val jdbcProfile: JdbcProfile
 
   private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
     case change@DynData(currentColTran, currentValue) =>
@@ -37,33 +36,35 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
   }
 
   def change[T](col: E => Rep[T], value: T)
-               (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
+    (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
     val data = DynData(col, value)
     val subQuery = query
     val subDataList = data :: dataList
-    val driver = jdbcProfile
     new UpdateInfoContent[E, F] {
       override val query = subQuery
       override val dataList = subDataList
-      override val jdbcProfile = driver
     }
   }
 
   def changeIf[T](b: Boolean)(col: E => Rep[T], value: T)
-                 (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
+    (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
     if(b) change(col, value) else this
   }
 
-  def result: DBIOAction[Int, NoStream, Effect.Write] = {
+  private lazy val changes = dataList match {
+    case change :: tail =>
+      tail.foldLeft(changHead(change))((r, c) =>
+        r.append(c)
+      )
+    case _ => throw new IllegalArgumentException("Cannot convert a empty list to Chage[_]")
+  }
+
+  def result(implicit convert: Query[changes.ColType, changes.ValType, F] => JdbcActionComponent#UpdateActionExtensionMethods[changes.ValType]): DBIO[Int] = {
     dataList match {
-      case change :: tail =>
-        val changes = tail.foldLeft(changHead(change))({ (r, c) =>
-          r.append(c)
-        })
-        val repsQuery = query.map(changes.col(_))(changes.shape)
-        import jdbcProfile.api._
-        repsQuery.update(changes.data)
-      case Nil => DBIO successful 0
+      case head :: tail =>
+        convert(query.map(changes.col(_))(changes.shape)).update(changes.data)
+      case _ =>
+        DBIO successful 0
     }
   }
 
@@ -71,14 +72,13 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
 
 object DynUpdate {
 
-  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F])(driver: JdbcProfile) =
-    withChanges(initQuery, Nil)(driver)
+  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F]) =
+    withChanges(initQuery, Nil)
 
-  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]])(driver: JdbcProfile) =
+  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]]) =
     new UpdateInfoContent[E, F] {
       override val query = initQuery
       val dataList = updateDataList
-      val jdbcProfile = driver
     }
 
 }
