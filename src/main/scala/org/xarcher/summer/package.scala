@@ -1,35 +1,27 @@
 package org.xarcher
 
+import scala.language.existentials
+import scala.language.higherKinds
+import scala.language.implicitConversions
+import slick.lifted._
+
+/**
+  * Created by djx314 on 2015/11/23.
+  */
 package object summer {
 
-  //val UpdateAction = updatemacro.UpdateAction
-  //val UpdateQuery = updatemacro.UpdateQuery
-
-  /*implicit class QuerySyntax[E <: AbstractTable[_], F[_]](val baseQuery: Query[E, _, F]) {
-
-    def change[T](col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
-      val data = DynData(col, value)
-      UpdateBuilder(data :: Nil, baseQuery)
-    }
-
-    def changeIf[T](b: => Boolean)(col: E => Rep[T], value: T)(implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) =
-      if(b) change(col, value) else UpdateBuilder(Nil, baseQuery)
-
-  }
-
-  final case class UpdateBuilder[E <: AbstractTable[_], F[_]](changes: List[DynData[E, _]], query: Query[E, _, F]) {
+  implicit class queryToSlickSummerUpdateInfoContent[E <: AbstractTable[_], F[_]](query: Query[E, _, F]) {
 
     def change[T](col: E => Rep[T], value: T)
       (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
-      val data = DynData(col, value)
-      UpdateBuilder(data :: changes, query)
+      DynUpdate(query).change(col, value)
     }
 
     def changeIf[T](b: Boolean)(col: E => Rep[T], value: T)
       (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
-      if(b) change(col, value) else this
+      DynUpdate(query).changeIf(b)(col, value)
     }
 
-  }*/
+  }
 
 }

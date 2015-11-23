@@ -1,11 +1,11 @@
 package org.xarcher.summer
 
-import slick.driver.JdbcProfile
+import slick.driver.{JdbcActionComponent, JdbcProfile}
 
 import scala.language.existentials
-import slick.lifted._
-import slick.dbio._
 import scala.language.higherKinds
+import slick.dbio._
+import slick.lifted._
 
 /**
  * Created by djx314 on 15-6-22.
@@ -19,52 +19,52 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
 
   val query: Query[E, _, F]
   val dataList: List[DynData[E, _]]
-  val jdbcProfile: JdbcProfile
 
   private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
-    case change@DynData(currentColTran, currentValue) =>
-      import change._
+    case singleChange@DynData(currentColTran, currentValue) =>
+      import singleChange._
       val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
       val value =  Tuple1(currentValue)
       implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
       new Change[E] {
-        type ColType = Tuple1[Rep[DataType]]
-        type ValType = Tuple1[DataType]
-        val col = colunm
-        val data = value
-        val shape = dynTuple1Shape
+        override type ColType = Tuple1[Rep[DataType]]
+        override type ValType = Tuple1[DataType]
+        override val col = colunm
+        override val data = value
+        override val shape = dynTuple1Shape
       }
   }
 
   def change[T](col: E => Rep[T], value: T)
-               (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
+    (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
     val data = DynData(col, value)
     val subQuery = query
     val subDataList = data :: dataList
-    val driver = jdbcProfile
     new UpdateInfoContent[E, F] {
       override val query = subQuery
       override val dataList = subDataList
-      override val jdbcProfile = driver
     }
   }
 
   def changeIf[T](b: Boolean)(col: E => Rep[T], value: T)
-                 (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
+    (implicit dynShape: Shape[_ <: ShapeLevel, Rep[T], T, Rep[T]]) = {
     if(b) change(col, value) else this
   }
 
-  def result: DBIOAction[Int, NoStream, Effect.Write] = {
+  private lazy val changes = dataList match {
+    case change :: tail =>
+      tail.foldLeft(changHead(change))((r, c) =>
+        r.append(c)
+      )
+    case _ => throw new IllegalArgumentException("Cannot convert a empty list to Chage[_]")
+  }
+
+  def result(implicit convert: Query[changes.ColType, changes.ValType, F] => JdbcActionComponent#UpdateActionExtensionMethods[changes.ValType]): DBIO[Int] = {
     dataList match {
-      case change :: tail =>
-        val changes = tail.foldLeft(changHead(change))({ (r, c) =>
-          r.append(c)
-        })
-        import changes._
-        val repsQuery = query.map(col(_))(shape)
-        import jdbcProfile.api._
-        repsQuery.update(data)
-      case Nil => DBIO successful 0
+      case head :: tail =>
+        convert(query.map(changes.col(_))(changes.shape)).update(changes.data)
+      case _ =>
+        DBIO successful 0
     }
   }
 
@@ -72,14 +72,13 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
 
 object DynUpdate {
 
-  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F])(driver: JdbcProfile) =
-    withChanges(initQuery, Nil)(driver)
+  def apply[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F]) =
+    withChanges(initQuery, Nil)
 
-  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]])(driver: JdbcProfile) =
+  def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]]) =
     new UpdateInfoContent[E, F] {
       override val query = initQuery
-      val dataList = updateDataList
-      val jdbcProfile = driver
+      override val dataList = updateDataList
     }
 
 }
@@ -92,50 +91,20 @@ private trait Change[E <: AbstractTable[_]] {
   val shape:  Shape[_ <: FlatShapeLevel, ColType, ValType, ColType]
 
   def append(change: DynData[E, _]) = change match {
-    case change@DynData(currentColTran, currentValue) =>
-      import change._
+    case singleChange@DynData(currentColTran, currentValue) =>
+      import singleChange._
       type NewColType = (Rep[DataType], ColType)
       type NewValType = (DataType, ValType)
       val colunm: E => NewColType = (table: E) => currentColTran(table) -> col(table)
       val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
       val value =  currentValue -> data
       new Change[E] {
-        type ColType = NewColType
-        type ValType = NewValType
-        val col = colunm
-        val data = value
-        val shape = dynTuple2Shape
+        override type ColType = NewColType
+        override type ValType = NewValType
+        override val col = colunm
+        override val data = value
+        override val shape = dynTuple2Shape
       }
   }
 
 }
-
-/*trait DynUpdate {
-
-  private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): DynamicUpdateChange[E] = change match {
-    case change@DynData(currentColTran, currentValue) =>
-      import change._
-      val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
-      val value =  Tuple1(currentValue)
-      implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
-      new DynamicUpdateChange[E] {
-        type ColType = Tuple1[Rep[DataType]]
-        type ValType = Tuple1[DataType]
-        val col = colunm
-        val data = value
-        val shape = dynTuple1Shape
-      }
-  }
-
-  def update[E <: AbstractTable[_]](dataList: List[DynData[E, _]]): Option[DynamicUpdateChange[E]] = {
-    dataList match {
-      case change :: tail =>
-        Option(tail.foldLeft(changHead(change)) { (r, c) =>
-          r.append(c)
-        })
-      case Nil => None
-    }
-  }
-
-}
-object DynUpdate extends DynUpdate*/
