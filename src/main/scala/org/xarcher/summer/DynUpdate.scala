@@ -27,11 +27,11 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
       val value =  Tuple1(currentValue)
       implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
       new Change[E] {
-        type ColType = Tuple1[Rep[DataType]]
-        type ValType = Tuple1[DataType]
-        val col = colunm
-        val data = value
-        val shape = dynTuple1Shape
+        override type ColType = Tuple1[Rep[DataType]]
+        override type ValType = Tuple1[DataType]
+        override val col = colunm
+        override val data = value
+        override val shape = dynTuple1Shape
       }
   }
 
@@ -78,7 +78,7 @@ object DynUpdate {
   def withChanges[E <: AbstractTable[_], F[_]](initQuery: Query[E, _, F], updateDataList: List[DynData[E, _]]) =
     new UpdateInfoContent[E, F] {
       override val query = initQuery
-      val dataList = updateDataList
+      override val dataList = updateDataList
     }
 
 }
@@ -99,11 +99,11 @@ private trait Change[E <: AbstractTable[_]] {
       val dynTuple2Shape = new TupleShape[FlatShapeLevel, (Rep[DataType], ColType), (DataType, ValType), (Rep[DataType], ColType)](dynShape, shape)
       val value =  currentValue -> data
       new Change[E] {
-        type ColType = NewColType
-        type ValType = NewValType
-        val col = colunm
-        val data = value
-        val shape = dynTuple2Shape
+        override type ColType = NewColType
+        override type ValType = NewValType
+        override val col = colunm
+        override val data = value
+        override val shape = dynTuple2Shape
       }
   }
 
