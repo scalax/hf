@@ -21,8 +21,8 @@ trait UpdateInfoContent[E <: AbstractTable[_], F[_]] {
   val dataList: List[DynData[E, _]]
 
   private def changHead[E <: AbstractTable[_]](change: DynData[E, _]): Change[E] = change match {
-    case change@DynData(currentColTran, currentValue) =>
-      import change._
+    case singleChange@DynData(currentColTran, currentValue) =>
+      import singleChange._
       val colunm: E => Tuple1[Rep[DataType]] = (table: E) => Tuple1(currentColTran(table))
       val value =  Tuple1(currentValue)
       implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[Rep[DataType]], Tuple1[DataType], Tuple1[Rep[DataType]]](dynShape)
@@ -91,8 +91,8 @@ private trait Change[E <: AbstractTable[_]] {
   val shape:  Shape[_ <: FlatShapeLevel, ColType, ValType, ColType]
 
   def append(change: DynData[E, _]) = change match {
-    case change@DynData(currentColTran, currentValue) =>
-      import change._
+    case singleChange@DynData(currentColTran, currentValue) =>
+      import singleChange._
       type NewColType = (Rep[DataType], ColType)
       type NewValType = (DataType, ValType)
       val colunm: E => NewColType = (table: E) => currentColTran(table) -> col(table)
