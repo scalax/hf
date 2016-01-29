@@ -15,7 +15,7 @@ import slick.driver.H2Driver.api._
  * Created by djx314 on 16-1-30.
  */
 
-class NewUpdateTest extends FlatSpec
+class HfTest extends FlatSpec
     with ScalaFutures
     with Matchers
     with BeforeAndAfter
@@ -98,7 +98,7 @@ class NewUpdateTest extends FlatSpec
         )
       }
 
-    val finalQ = updateQ.update >> getQ
+    val finalQ = updateQ.update.transactionally >> getQ
     val updated = db.run(finalQ).futureValue
     updated.a1 should be(2333)
     updated.a2 should be(Some(2))
