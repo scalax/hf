@@ -121,24 +121,18 @@ trait QueryExtensionMethods {
 
   }
 
-  implicit class slickHfRepExtensionMethod[R1](repLike: R1) {
+  implicit class slickHfRepExtensionMethod[R1, T1, G1](repLike: R1)(implicit shape1: Shape[_ <: ShapeLevel, R1, T1, G1]) {
 
-    class HDataGen[R1, T1, G1](val inRep: R1, val shape1: Shape[_ <: ShapeLevel, R1, T1, G1]) {
-      def to(data1: T1): HData = {
-        new HData {
-          override type ColType = R1
-          override type DataType = T1
-          override type TargetType = G1
-          override val shape = shape1
-          override val col = inRep
-          override val data = data1
-          override val isNeed = true
-        }
+    def to(data1: T1) = {
+      new HData {
+        override type ColType = R1
+        override type DataType = T1
+        override type TargetType = G1
+        override val shape = shape1
+        override val col = repLike
+        override val data = data1
+        override val isNeed = true
       }
-    }
-
-    def gen[T1, G1]()(implicit shape1: Shape[_ <: ShapeLevel, R1, T1, G1]): HDataGen[R1, T1, G1] = {
-      new HDataGen(repLike, shape1)
     }
 
   }

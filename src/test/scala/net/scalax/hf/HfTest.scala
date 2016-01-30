@@ -37,7 +37,7 @@ class HfTest extends FlatSpec
 
   before {
     Await.result(db.run((smallTq.schema ++ largeTq.schema).create), Duration.Inf)
-    Await.result(db.run(smallTq.hf.map(s => List(s.gen to data)).insert), Duration.Inf)
+    Await.result(db.run(smallTq.hf.map(s => List(s to data)).insert), Duration.Inf)
   }
 
   after {
@@ -51,9 +51,9 @@ class HfTest extends FlatSpec
         small <- smallTq.filter(_.id === 2333L).hf
       } yield {
         List(
-          small.a1.gen to 2333,
-          small.a2.gen to Some(2333),
-          small.a3.gen to "wang"
+          small.a1 to 2333,
+          small.a2 to Some(2333),
+          small.a3 to "wang"
         )
       }
 
@@ -71,9 +71,9 @@ class HfTest extends FlatSpec
         small <- smallTq.filter(_.id === 2333L).hf
       } yield {
         List(
-          small.a1.gen to 2333 need ("github" == "github"),
-          small.a2.gen to Some(2333) need ("scala" == "china"),
-          small.a3.gen to "wang" need ("archer" == "saber")
+          small.a1 to 2333 need ("github" == "github"),
+          small.a2 to Some(2333) need ("scala" == "china"),
+          small.a3 to "wang" need ("archer" == "saber")
         )
       }
 
@@ -91,10 +91,10 @@ class HfTest extends FlatSpec
         small <- smallTq.filter(_.id === 2333L).hf
       } yield {
         List(
-          small.column[Int]("a1").gen to 2333 need ("github" == "github"),
-          small.column[Option[Int]]("a2").gen to Some(2333) need ("scala" == "china"),
-          small.column[String]("a3").gen to "wang",
-          small.column[Int]("a4").gen to 5678 need ("archer" == "archer")
+          small.column[Int]("a1") to 2333 need ("github" == "github"),
+          small.column[Option[Int]]("a2") to Some(2333) need ("scala" == "china"),
+          small.column[String]("a3") to "wang",
+          small.column[Int]("a4") to 5678 need ("archer" == "archer")
         )
       }
 
