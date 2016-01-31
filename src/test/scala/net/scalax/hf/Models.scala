@@ -1,4 +1,4 @@
-package org.xarcher.summer.test
+package net.scalax.hf.test
 
 import slick.collection.heterogeneous.HNil
 import slick.driver.H2Driver.api._

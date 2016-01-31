@@ -1,12 +1,30 @@
-package org.xarcher.summer
-
-import sbt._
 import Keys._
 
 import sbt._
-import Keys._
+import scala.language.reflectiveCalls
 
-object CustomSettings {
+val OSName = new {
+  val OS = System.getProperty("os.name").toLowerCase
+  def isLinux = OS.indexOf("linux") >= 0
+  def isMacOS = OS.indexOf("mac") >= 0 && OS.indexOf("os") > 0 && OS.indexOf("x") < 0
+  def isMacOSX = OS.indexOf("mac") >= 0 && OS.indexOf("os") > 0 && OS.indexOf("x") > 0
+  def isWindows = OS.indexOf("windows") >= 0
+  def isOS2 = OS.indexOf("os/2") >= 0
+  def isSolaris = OS.indexOf("solaris") >= 0
+  def isSunOS = OS.indexOf("sunos") >= 0
+  def isMPEiX = OS.indexOf("mpe/ix") >= 0
+  def isHPUX = OS.indexOf("hp-ux") >= 0
+  def isAix = OS.indexOf("aix") >= 0
+  def isOS390 = OS.indexOf("os/390") >= 0
+  def isFreeBSD = OS.indexOf("freebsd") >= 0
+  def isIrix = OS.indexOf("irix") >= 0
+  def isDigitalUnix = OS.indexOf("digital") >= 0 && OS.indexOf("unix") > 0
+  def isNetWare = OS.indexOf("netware") >= 0
+  def isOSF1 = OS.indexOf("osf1") >= 0
+  def isOpenVMS = OS.indexOf("openvms") >= 0
+}
+
+val CustomSettings = new {
 
   def customSettings = scalaSettings ++ resolversSettings ++ extAlias
 
@@ -58,3 +76,24 @@ object CustomSettings {
     """.stripMargin
 
 }
+
+val initPrintln = {
+  println("""
+   ___  _   _  _ __ ___   _ __ ___    ___  _ __
+  / __|| | | || '_ ` _ \ | '_ ` _ \  / _ \| '__|
+  \__ \| |_| || | | | | || | | | | ||  __/| |
+  |___/ \__,_||_| |_| |_||_| |_| |_| \___||_|
+
+  """
+  )
+}
+
+CustomSettings.customSettings
+
+name := "slick-summer"
+libraryDependencies ++= Seq(
+  "com.typesafe.slick" %% "slick" % "3.1.1",
+  "org.scalatest" %% "scalatest" % "2.2.4" % "test",
+  "com.h2database" % "h2" % "1.4.187" % "test",
+  "org.slf4j" % "slf4j-simple" % "1.7.12" % "test"
+)
