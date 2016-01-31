@@ -15,7 +15,7 @@ trait HData {
 
   val isNeed: Boolean
 
-  def need(isNeed: Boolean) = {
+  def when(isNeed: Boolean) = {
     this.copy(isNeed = isNeed)
   }
 

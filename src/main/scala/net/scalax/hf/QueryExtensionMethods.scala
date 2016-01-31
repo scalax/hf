@@ -123,7 +123,7 @@ trait QueryExtensionMethods {
 
   implicit class slickHfRepExtensionMethod[R1, T1, G1](repLike: R1)(implicit shape1: Shape[_ <: ShapeLevel, R1, T1, G1]) {
 
-    def to(data1: T1) = {
+    def setTo(data1: T1) = {
       new HData {
         override type ColType = R1
         override type DataType = T1

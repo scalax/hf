@@ -37,7 +37,7 @@ class HfTest extends FlatSpec
 
   before {
     Await.result(db.run((smallTq.schema ++ largeTq.schema).create), Duration.Inf)
-    Await.result(db.run(smallTq.hf.map(s => List(s to data)).insert), Duration.Inf)
+    Await.result(db.run(smallTq.hf.map(s => List(s setTo data)).insert), Duration.Inf)
   }
 
   after {
@@ -51,9 +51,9 @@ class HfTest extends FlatSpec
         small <- smallTq.filter(_.id === 2333L).hf
       } yield {
         List(
-          small.a1 to 2333,
-          small.a2 to Some(2333),
-          small.a3 to "wang"
+          small.a1 setTo 2333,
+          small.a2 setTo Some(2333),
+          small.a3 setTo "wang"
         )
       }
 
@@ -68,12 +68,12 @@ class HfTest extends FlatSpec
 
     val updateQ =
       for {
-        small <- smallTq.filter(_.id === 2333L).hf
+        small <- smallTq.hf if small.id === 2333L
       } yield {
         List(
-          small.a1 to 2333 need ("github" == "github"),
-          small.a2 to Some(2333) need ("scala" == "china"),
-          small.a3 to "wang" need ("archer" == "saber")
+          small.a1 setTo 2333 when ("github" == "github"),
+          small.a2 setTo Some(2333) when ("scala" == "china"),
+          small.a3 setTo "wang" when ("archer" == "saber")
         )
       }
 
@@ -88,13 +88,13 @@ class HfTest extends FlatSpec
 
     val updateQ =
       for {
-        small <- smallTq.filter(_.id === 2333L).hf
+        small <- smallTq.hf if small.id === 2333L
       } yield {
         List(
-          small.column[Int]("a1") to 2333 need ("github" == "github"),
-          small.column[Option[Int]]("a2") to Some(2333) need ("scala" == "china"),
-          small.column[String]("a3") to "wang",
-          small.column[Int]("a4") to 5678 need ("archer" == "archer")
+          small.column[Int]("a1") setTo 2333 when ("github" == "github"),
+          small.column[Option[Int]]("a2") setTo Some(2333) when ("scala" == "china"),
+          small.column[String]("a3") setTo "wang",
+          small.column[Int]("a4") setTo 5678 when ("archer" == "archer")
         )
       }
 
@@ -109,7 +109,7 @@ class HfTest extends FlatSpec
   "empty update list" should "update with out exception and return 0" in {
     val updateQ =
       for {
-        small <- smallTq.filter(_.id === 2333L).hf
+        small <- smallTq.hf if small.id === 2333L
       } yield {
         Nil
       }
