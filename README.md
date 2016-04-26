@@ -21,18 +21,18 @@ import slick.driver.H2Driver.api._
 
 val updateQ =
   for {
-    small <- smallTq.hf if small.id === 2333L
+    small <- smallTq.filter(_.id === 2333L).hf
   } yield {
     List(
-      small.a1 setTo 2333 when ("github" == "github"),
-      small.a2 setTo Some(2333) when ("scala" == "china"),
-      small.a3 setTo "wang" when ("archer" == "saber")
+      small.a1 setTo 2333,
+      small.a2 setTo Some(2333),
+      small.a3 setTo "wang"
     )
   }
 updateQ.update
 ```
 
-另外新增了`changeIf`来做选择性更新
+另外新增了`when`来做选择性更新
 
 ```scala
 import net.scalax.hf._
@@ -45,7 +45,7 @@ val updateQ =
     List(
       small.a1 setTo 2333 when ("github" == "github"),
       small.a2 setTo Some(2333) when ("scala" == "china"),
-      small.a3 setTo "wang" when ("archer" == "saber")
+      small.a3 setTo "wang"
     )
   }
 updateQ.update
