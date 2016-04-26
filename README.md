@@ -16,28 +16,42 @@ Persons.filter(_.id === id).map { p =>
 本项目实现了以上功能，然而一定程度上破坏了和collection的一致性
 
 ```scala
-import org.xarcher.summer._
+import net.scalax.hf._
+import slick.driver.H2Driver.api._
 
-Persons
-  .filter(_.id === id)
-  .change(_.name, "foo")
-  .change(_.address, "bar")
-  .change(_.postcode, "baz")
-  .change(_.updateTime, now)
-  .result
+val updateQ =
+  for {
+    small <- smallTq.hf if small.id === 2333L
+  } yield {
+    List(
+      small.a1 setTo 2333 when ("github" == "github"),
+      small.a2 setTo Some(2333) when ("scala" == "china"),
+      small.a3 setTo "wang" when ("archer" == "saber")
+    )
+  }
+updateQ.update
 ```
 
 另外新增了`changeIf`来做选择性更新
 
 ```scala
-import org.xarcher.summer._
-Persons
-  .filter(_.id === id)
-  .changeIf("foo" == "bar")(_.name, "foo")
-  .result
+import net.scalax.hf._
+import slick.driver.H2Driver.api._
+
+val updateQ =
+  for {
+    small <- smallTq.hf if small.id === 2333L
+  } yield {
+    List(
+      small.a1 setTo 2333 when ("github" == "github"),
+      small.a2 setTo Some(2333) when ("scala" == "china"),
+      small.a3 setTo "wang" when ("archer" == "saber")
+    )
+  }
+updateQ.update
 ```
 
-如何使用可以查看[单元测试](https://github.com/scalax/slick-summer/blob/master/src/test/scala/org/xarcher/summer/test/DynamicUpdateTest.scala)
+如何使用可以查看[单元测试](https://github.com/scalax/hf/blob/master/src/test/scala/net/scalax/hf/HfTest.scala)
 
 ## 实现思路
 
