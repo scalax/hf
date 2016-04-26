@@ -5,51 +5,6 @@ import slick.lifted._
 
 class QueryToUQueryExtensionMethods[E, U](query1: Query[E, U, Seq]) {
 
-  private trait Change {
-    type ColType <: Product
-    type ValType <: Product
-    type TargetType <: Product
-    val col: ColType
-    val data: ValType
-    val shape:  Shape[_ <: FlatShapeLevel, ColType, ValType, TargetType]
-
-    def append(change: HData) = {
-      type NewColType = (ColType, change.ColType)
-      type NewValType = (ValType, change.DataType)
-      type NewTargetType = (TargetType, change.TargetType)
-      val colunm: NewColType = col -> change.col
-      val dynTuple2Shape = new TupleShape[FlatShapeLevel, (ColType, change.ColType), (ValType, change.DataType), (TargetType, change.TargetType)](shape, change.shape)
-      val value = data -> change.data
-      new Change {
-        override type ColType = NewColType
-        override type ValType = NewValType
-        override type TargetType = NewTargetType
-        override val col = colunm
-        override val data = value
-        override val shape = dynTuple2Shape
-      }
-    }
-
-  }
-
-  private object Change {
-
-    def head(change: HData): Change = {
-      val colunm: Tuple1[change.ColType] = Tuple1(change.col)
-      val value =  Tuple1(change.data)
-      implicit val dynTuple1Shape = new TupleShape[FlatShapeLevel, Tuple1[change.ColType], Tuple1[change.DataType], Tuple1[change.TargetType]](change.shape)
-      new Change {
-        override type ColType = Tuple1[change.ColType]
-        override type ValType = Tuple1[change.DataType]
-        override type TargetType = Tuple1[change.TargetType]
-        override val col = colunm
-        override val data = value
-        override val shape = dynTuple1Shape
-      }
-    }
-
-  }
-
   def flatMap(f: E => HQuery)
   : HQuery = {
     val generator = new AnonSymbol
@@ -65,18 +20,16 @@ class QueryToUQueryExtensionMethods[E, U](query1: Query[E, U, Seq]) {
     }
   }
 
-  def map(f: E => List[HData]): HQuery = {
+  def map(f: E => List[HConverter]): HQuery = {
     flatMap(s => {
-      f(s).filter(_.isNeed == true) match {
-        case head :: tail =>
-          val selectRep = tail.foldLeft(Change.head(head))((eachRep, toAppend) => {
-            eachRep.append(toAppend)
-          })
-          val query2: Query[selectRep.TargetType, selectRep.ValType, Seq] = Query(selectRep.col)(selectRep.shape)
+      f(s).dropWhile(_.isNeed == false) match {
+        case list@(head :: tail) =>
+          val selectRep: HConverter = list.reduce(_ append _)
+          val query2: Query[selectRep.writer.TargetType, selectRep.writer.DataType, Seq] = Query(selectRep.writer.col)(selectRep.writer.writer)
           new HQuery {
-            override type E = selectRep.TargetType
-            override type U = selectRep.ValType
-            override val value: U = selectRep.data
+            override type E = selectRep.writer.TargetType
+            override type U = selectRep.writer.DataType
+            override val value: U = selectRep.convert(selectRep.reader.reader)
             override val query = query2
           }
         case _ =>
@@ -121,16 +74,17 @@ trait QueryExtensionMethods {
 
   }
 
-  implicit class slickHfRepExtensionMethod[R1, T1, G1](repLike: R1)(implicit shape1: Shape[_ <: ShapeLevel, R1, T1, G1]) {
+  implicit class slickHfRepExtensionMethod[R1, T1, G1](repLike: R1)(implicit shape1: Shape[_ <: FlatShapeLevel, R1, T1, G1]) {
 
-    def setTo(data1: T1) = {
-      new HData {
-        override type ColType = R1
-        override type DataType = T1
-        override type TargetType = G1
-        override val shape = shape1
-        override val col = repLike
-        override val data = data1
+    def setTo(data1: T1): HConverter = {
+      setToDiff(data1, (s: T1) => s)
+    }
+
+    def setToDiff[T2](data1: T2, convert1: T2 => T1): HConverter = {
+      new HConverter {
+        override val reader = HReader(data1)
+        override val writer = HWriter(repLike, shape1)
+        override val convert = convert1
         override val isNeed = true
       }
     }
