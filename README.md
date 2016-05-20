@@ -29,7 +29,8 @@ val updateQ =
       small.a3 setTo "wang"
     )
   }
-updateQ.update
+updateQ.update //update DBIO
+updateQ.insert //insert DBIO
 ```
 
 另外新增了`when`来做选择性更新
@@ -48,7 +49,8 @@ val updateQ =
       small.a3 setTo "wang"
     )
   }
-updateQ.update
+updateQ.update //update DBIO
+updateQ.insert //insert DBIO
 ```
 
 如何使用可以查看[单元测试](https://github.com/scalax/hf/blob/master/src/test/scala/net/scalax/hf/HfTest.scala)
