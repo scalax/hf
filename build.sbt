@@ -2,8 +2,7 @@ import Keys._
 
 import sbt._
 import scala.language.reflectiveCalls
-
-val OSName = new {
+/*val OSName = new {
   val OS = System.getProperty("os.name").toLowerCase
   def isLinux = OS.indexOf("linux") >= 0
   def isMacOS = OS.indexOf("mac") >= 0 && OS.indexOf("os") > 0 && OS.indexOf("x") < 0
@@ -22,17 +21,16 @@ val OSName = new {
   def isNetWare = OS.indexOf("netware") >= 0
   def isOSF1 = OS.indexOf("osf1") >= 0
   def isOpenVMS = OS.indexOf("openvms") >= 0
-}
-
+}*/
 val CustomSettings = new {
 
   def customSettings = scalaSettings ++ resolversSettings ++ extAlias
 
   def scalaSettings =
     Seq(
-      scalaVersion := "2.11.7",
+      scalaVersion := "2.11.8",
       scalacOptions ++= Seq("-feature", "-deprecation"),
-      addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
+      addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
     )
 
   def resolversSettings =
@@ -48,11 +46,10 @@ val CustomSettings = new {
 
   def extAliasInfo = List(
     Option("xeclipse" -> "eclipse with-source=true skip-parents=false"),
-    if (OSName.isWindows)
+    if (/*OSName.isWindows*/scala.util.Properties.isWin)
       Option(windowsGitInitCommandMap)
-    else if (OSName.isLinux)
+    else//if (OSName.isLinux)
       Option(linuxGitInitCommandMap)
-    else None
   )
 
   def extAlias = extAliasInfo.collect { case Some(s) => s }
@@ -92,7 +89,7 @@ CustomSettings.customSettings
 
 name := "slick-summer"
 libraryDependencies ++= Seq(
-  "com.typesafe.slick" %% "slick" % "3.1.1",
+  "com.typesafe.slick" %% "slick" % "3.2.0-M1",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "com.h2database" % "h2" % "1.4.187" % "test",
   "org.slf4j" % "slf4j-simple" % "1.7.12" % "test"

@@ -1,7 +1,7 @@
 package net.scalax.hf.test
 
 import slick.collection.heterogeneous.HNil
-import slick.driver.H2Driver.api._
+import slick.jdbc.H2Profile.api._
 /**
  * Created by djx314 on 15-6-22.
  */
@@ -31,26 +31,7 @@ class SmallTable(tag: Tag) extends Table[SmallModel](tag, "aabbbbbbb") {
       a4 ::
       a5 ::
       HNil
-      ).shaped <> (
-      { case x => SmallModel(
-        x(0),
-        x(1),
-        x(2),
-        x(3),
-        x(4),
-        x(5)
-      )}, ({ x: SmallModel =>
-      Option((
-        x.id ::
-          x.a1 ::
-          x.a2 ::
-          x.a3 ::
-          x.a4 ::
-          x.a5 ::
-          HNil
-        ))
-    })
-      )
+      ).mapTo[SmallModel]
 }
 
 case class LargeModel(
@@ -136,62 +117,5 @@ class LargeTable(tag: Tag) extends Table[LargeModel](tag, "test_aabb") {
         a23 ::
         a24 ::
         HNil
-      ).shaped <> (
-      { case x => LargeModel(
-        x(0),
-        x(1),
-        x(2),
-        x(3),
-        x(4),
-        x(5),
-        x(6),
-        x(7),
-        x(8),
-        x(9),
-        x(10),
-        x(11),
-        x(12),
-        x(13),
-        x(14),
-        x(15),
-        x(16),
-        x(17),
-        x(18),
-        x(19),
-        x(20),
-        x(21),
-        x(22),
-        x(23),
-        x(24)
-      )}, ({ x: LargeModel =>
-      Option((
-        x.id ::
-          x.a1 ::
-          x.a2 ::
-          x.a3 ::
-          x.a4 ::
-          x.a5 ::
-          x.a6 ::
-          x.a7 ::
-          x.a8 ::
-          x.a9 ::
-          x.a10 ::
-          x.a11 ::
-          x.a12 ::
-          x.a13 ::
-          x.a14 ::
-          x.a15 ::
-          x.a16 ::
-          x.a17 ::
-          x.a18 ::
-          x.a19 ::
-          x.a20 ::
-          x.a21 ::
-          x.a22 ::
-          x.a23 ::
-          x.a24 ::
-          HNil
-        ))
-    })
-      )
+      ).mapTo[LargeModel]
 }

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import slick.driver.H2Driver.api._
+import slick.jdbc.H2Profile.api._
 
 /**
  * Created by djx314 on 16-1-30.
