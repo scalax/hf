@@ -5,7 +5,6 @@ import slick.dbio.DBIO
 import slick.jdbc.JdbcActionComponent
 import slick.lifted._
 
-import scala.language.existentials
 import scala.reflect.ClassTag
 
 trait DataWrap {
@@ -34,25 +33,18 @@ trait QueryBind {
   def bind[E, U](query: Query[E, U, Seq]): Query[E, U, Seq]
 }
 
-final class ListAnyShape[Level <: ShapeLevel](override val shapes: Seq[Shape[_ <: ShapeLevel, _, _, _]])(implicit val classTag: ClassTag[Seq[Any]])
-  extends MappedProductShape[Level, Seq[Any], Seq[Any], Seq[Any], Seq[Any]] {
-  override def getIterator(value: Seq[Any]) = value.toIterator
-  def getElement(value: Seq[Any], idx: Int) = value(idx)
-  def buildValue(elems: IndexedSeq[Any]) = elems
-  def copy(shapes: Seq[Shape[_ <: ShapeLevel, _, _, _]]) = new ListAnyShape(shapes)
-}
-
 trait HSlick {
   val bind: QueryBind
   val wraps: List[DataWrap]
 
-  lazy val (updateQuery, updateData) = {
+  lazy val (updateQuery, updateData, isEmpty) = {
     val itemToUpdate = wraps.filter(_.isNeed == true)
-    bind.bind(Query(itemToUpdate.map(_.col))(new ListAnyShape[FlatShapeLevel](itemToUpdate.map(_.shape)))) -> itemToUpdate.map(_.data)
+    val lShape = new ListAnyShape(itemToUpdate.map(_.shape))
+    (bind.bind(Query(itemToUpdate.map(_.col))(lShape)), itemToUpdate.map(_.data), SlickUtils.isShapeEmpty(lShape))
   }
 
   def update(implicit convert: Query[Seq[Any], Seq[Any], Seq] => JdbcActionComponent#UpdateActionExtensionMethods[Seq[Any]]): DBIO[Int] = {
-    if (wraps.size == 0)
+    if (isEmpty)
       DBIO.successful(0)
     else {
       updateQuery.update(updateData)
@@ -60,7 +52,7 @@ trait HSlick {
   }
 
   def insert(implicit convert: Query[Seq[Any], Seq[Any], Seq] => JdbcActionComponent#InsertActionExtensionMethods[Seq[Any]]): DBIO[Int] = {
-    if (wraps.size == 0)
+    if (isEmpty)
       DBIO.successful(0)
     else {
       updateQuery.+=(updateData)
