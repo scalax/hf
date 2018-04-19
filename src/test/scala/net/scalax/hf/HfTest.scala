@@ -31,7 +31,7 @@ class HfTest extends FlatSpec
   lazy val db = {
     val datasource = new JdbcDataSource()
     datasource.setUrl(s"jdbc:h2:mem:hfTest;DB_CLOSE_DELAY=-1")
-    Database.forDataSource(datasource)
+    Database.forDataSource(datasource, Option(200))
   }
 
   val data = SmallModel(Option(2333L), 1, Option(2), "a3", 4, 5)
